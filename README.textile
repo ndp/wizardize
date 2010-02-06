@@ -15,7 +15,7 @@ That's about it.
 
 1. Download the code from 
 
-http://github.com/ndp/wizardize/raw/master/public/javascripts/jquery/jquery.wizardize.js
+<a href="http://github.com/ndp/wizardize/raw/master/public/javascripts/jquery/jquery.wizardize.js">http://github.com/ndp/wizardize/raw/master/public/javascripts/jquery/jquery.wizardize.js</a>
 
 2. Include it in your page
 
