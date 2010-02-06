@@ -1,4 +1,4 @@
-== Welcome to Wizardize
+h3. Welcome to Wizardize
 
 This plugin takes a regular form and creates separate panels out of it based 
 on the fieldsets included in the page.
@@ -11,7 +11,7 @@ you see appropriate (or "form ol:first-child { display: none})
 
 That's about it.
 
-== Getting Started
+h3. Getting Started
 
 1. Download the code from 
 
@@ -23,11 +23,11 @@ That's about it.
 
 4. Wizardize!
 
-   $('form').wizardize();
+   *$('form').wizardize();*
    
 
    
-== Options
+h3. Options
 
 
 wizardize accepts an options hash. All values are optional:
@@ -44,9 +44,9 @@ wizardize accepts an options hash. All values are optional:
 *  nextCallback: function to be called when the user goes to the next panel
 
 
-== Development
+h3. Development
 
 Run tests using:
 
-  rake spec:javascript
+    *rake spec:javascript*
 
