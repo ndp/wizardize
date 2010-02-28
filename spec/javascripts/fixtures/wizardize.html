@@ -5,6 +5,70 @@
   <title>Wizardize | JavaScript Testing Results</title>
   <link rel="stylesheet" href="screw.css" type="text/css" charset="utf-8"/>
   <script type="text/javascript" src="../../../vendor/plugins/blue-ridge/lib/blue-ridge.js"></script>
+  <style>
+form.wizardized {
+  height: 250px;
+  padding: 0;
+}
+
+form.wizardized ol {
+   display:block;
+   margin-bottom: 0;
+   padding: 0;
+}
+form.wizardized ol li {
+  display: inline-block;
+  width: 30%;
+  padding: 10px;
+  border: 1px solid #bbb;
+  border-bottom: none;
+  background-color: #999;
+  color: #666;
+}
+form.wizardized ol li.complete {
+  opacity: .5;
+  font-weight: bold;
+}
+form.wizardized ol li.active {
+  background-color: #eee;
+  font-style: italic;
+  color: #000;
+}
+form.wizardized ol li.enabled {
+  color: #000;
+}
+
+form.wizardized fieldset {
+  position: relative;
+  border-top: none;
+  height: 200px;
+  background-color: #eee;
+  margin: 0;
+}
+form.wizardized fieldset .next_prev_buttons {
+  position: absolute;
+  bottom: 0;
+  height: 35px;
+  width: 280px;
+  padding: 0;
+}
+  
+form.wizardized fieldset .next_prev_buttons a {
+  position: absolute;
+  bottom: 5px;
+  margin: 0;
+  padding: 5px 20px;
+  height: 20px;
+  width: 200px;
+  background-color: #ccc;
+}
+form.wizardized fieldset .next_prev_buttons .next {
+  right: 0;
+  width: 30%;
+  background-color: #bbb;
+}
+  
+  </style>
 </head>
 
 <body>
