@@ -45,6 +45,25 @@ Screw.Unit(function() {
         it('should enable the 2nd status button', function() {
           expect($('form ol li:not(.spacer):nth(1)').hasClass("enabled")).to(equal, true);
         });
+        describe('marking the second fieldset as complete', function() {
+          before(function() {
+            $('form').wizardizeMarkFieldsetAsComplete(1);
+          });
+          it('should enable the 3nd status button', function() {
+            expect($('form ol li:not(.spacer):nth(2)').hasClass("enabled")).to(equal, true);
+          });
+          describe("marking the first fieldset as incomplete", function() {
+            before(function() {
+              $('form').wizardizeMarkFieldsetAsIncomplete(0);
+            });
+            it('should remove the enabled class from the 3rd fieldset', function() {
+              expect($('form fieldset:nth(2)').hasClass("enabled")).to(equal, false);
+            });
+            it('should remove the enabled class from the 3rd status button', function() {
+              expect($('form ol li:not(.spacer):nth(2)').hasClass("enabled")).to(equal, false);
+            });
+          });
+        });
       });
 
       describe('marking the first fieldset as incomplete', function() {
@@ -315,6 +334,23 @@ Screw.Unit(function() {
 
       });
 
+      describe('setting the status button template function', function() {
+        before(function() {
+          $('form').wizardize({
+            statusButtonTemplateFunction: function(stepNumber, title) {
+              return 'step = $#, title = $TITLE'.replace(/\$#/, stepNumber).replace(/\$TITLE/, title);
+            }
+          });
+        });
+        it("should customize status buttons", function() {
+          expect($('form ol:first li:first').text()).to(equal, 'step = 1, title = Row');
+        });
+        it("should customize last status buttons", function() {
+          expect($('form ol:first li:last').text()).to(equal, 'step = 3, title = Beau');
+        });
+
+      });
+
       describe('using status button spacers', function() {
         before(function() {
           $('form').wizardize({
@@ -434,8 +470,41 @@ Screw.Unit(function() {
 
       });
 
-
+      describe("extra validation for step", function() {
+        var fieldsetValid;
+        var fieldset;
+        before(function() {
+          $('form').wizardize({
+            validateFieldset: function() {
+              fieldset = this;
+              if (fieldsetValid) {
+                $(this).addClass("complete");
+              }
+              return fieldsetValid;
+            }
+          });
+        });
+        it("should not proceed if validation fails", function() {
+          expect($("form fieldset:nth(0)").is(":visible")).to(equal, true);
+          fieldsetValid = false;
+          $('form fieldset:visible a.next').click();
+          expect($("form fieldset:nth(0)").is(":visible")).to(equal, true);
+        });
+        it("should proceed if validation passes", function() {
+          fieldsetValid = true;
+          expect($("form fieldset:nth(0)").is(":visible")).to(equal, true);
+          $('form fieldset:visible a.next').click();
+          expect($("form fieldset:nth(1)").is(":visible")).to(equal, true);
+        });
+        it("passes the proper fieldset to the validation function", function() {
+          fieldsetValid = true;
+          $('form fieldset:visible a.next').click();
+          expect(fieldset).to(equal, $("form fieldset:nth(0)").get(0));
+          $('form fieldset:visible a.next').click();
+          expect(fieldset).to(equal, $("form fieldset:nth(1)").get(0));
+        });
+      });
     });
-  });
 
+  });
 });
