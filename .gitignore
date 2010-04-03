@@ -3,3 +3,7 @@ test
 tmp
 doc
 .DS_Store
+.rakeTasks
+wizardize.iml
+wizardize.ipr
+wizardize.iws
