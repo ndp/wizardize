@@ -9,10 +9,14 @@ Screw.Unit(function() {
     $('#fixture').fixture();
   });
 
-  describe('wizardize', function() {
+  describe('wizardize plugin', function() {
 
+    it('should return the jQuery object passed in', function() {
+      $form = $('form');
+      expect($form.wizardize()).to(equal, $form);
+    });
 
-    describe('(with defaults)', function() {
+    describe('(using defaults)', function() {
       before(function() {
         $('form').wizardize();
       });
@@ -43,14 +47,14 @@ Screw.Unit(function() {
           $('form').wizardizeMarkFieldsetAsComplete(0);
         });
         it('should enable the 2nd status button', function() {
-          expect($('form ol li:not(.spacer):nth(1)').hasClass("enabled")).to(equal, true);
+          expect($('form ol li:not(.wzdr_spacer):nth(1)').hasClass("enabled")).to(equal, true);
         });
         describe('marking the second fieldset as complete', function() {
           before(function() {
             $('form').wizardizeMarkFieldsetAsComplete(1);
           });
           it('should enable the 3nd status button', function() {
-            expect($('form ol li:not(.spacer):nth(2)').hasClass("enabled")).to(equal, true);
+            expect($('form ol li:not(.wzdr_spacer):nth(2)').hasClass("enabled")).to(equal, true);
           });
           describe("marking the first fieldset as incomplete", function() {
             before(function() {
@@ -60,7 +64,7 @@ Screw.Unit(function() {
               expect($('form fieldset:nth(2)').hasClass("enabled")).to(equal, false);
             });
             it('should remove the enabled class from the 3rd status button', function() {
-              expect($('form ol li:not(.spacer):nth(2)').hasClass("enabled")).to(equal, false);
+              expect($('form ol li:not(.wzdr_spacer):nth(2)').hasClass("enabled")).to(equal, false);
             });
           });
         });
@@ -71,7 +75,7 @@ Screw.Unit(function() {
           $('form').wizardizeMarkFieldsetAsIncomplete(0);
         });
         it('should remove the enabled class from the 2nd status button', function() {
-          expect($('form ol li:not(.spacer):nth(1)').hasClass("enabled")).to(equal, false);
+          expect($('form ol li:not(.wzdr_spacer):nth(1)').hasClass("enabled")).to(equal, false);
         });
 
         it('should remove the enabled class from the 2nd fieldset', function() {
@@ -148,7 +152,7 @@ Screw.Unit(function() {
               });
 
               it("should mark the second button as enabled", function() {
-                expect($('form ol:first li:not(.spacer):nth(1)').hasClass("enabled")).to(equal, true);
+                expect($('form ol:first li:not(.wzdr_spacer):nth(1)').hasClass("enabled")).to(equal, true);
               });
 
             });
@@ -367,7 +371,7 @@ Screw.Unit(function() {
             expect($('form ol:first li:nth(1)').text()).to(equal, '::');
           });
           it("should have a 'spacer' class", function() {
-            expect($('form ol:first li:nth(1)').hasClass('spacer')).to(equal, true);
+            expect($('form ol:first li:nth(1)').hasClass('wzdr_spacer')).to(equal, true);
           });
           it("should insert spacers between steps 2 and 3", function() {
             expect($('form ol:first li:nth(3)').text()).to(equal, '::');

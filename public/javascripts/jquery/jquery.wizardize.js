@@ -1,59 +1,85 @@
-//TODO: not a proper jQuery function - can't chain
-$.fn.wizardize = function(settings) {
-  var config = $.extend({}, $.fn.wizardize.defaults, settings);
-  var $context = $(this).addClass('wizardized').data('config', config);
+/**
+ This plugin takes a regular form and creates separate panels out of it based
+ on the fieldsets included in the page.
 
-  // create a list of the panels
-  $context.prepend('<ol />');
-  var $statusButtons = $context.find('ol:first');
-  var $fieldsets = $('fieldset', $context);
+ * hides all but the first page
+ * adds a list of "status buttons" as the first element in the form. Style as
+ you see appropriate (or "form ol:first-child { display: none})
+ * adds "next" and "previous" buttons to each panel
+ * The regular submit button for the form is moved to the last panel.
 
-  var titles = $fieldsets.map(function(n, i) {
-    var title;
-    if (config.statusButtonsTemplate) {
-      title = config.statusButtonsTemplate.replace(/\$#/, n+1).replace(/\$TITLE/, this.title);
-    }
-    else {
-      title = config.statusButtonTemplateFunction(n+1, this.title);
-    }
-    return "<li>" + title + "</li>";
+ wizardize accepts an options hash. All values are optional:
+
+ *  statusButtonsTemplate: how the status buttons are named. Supports simple
+ variable substitution: '$TITLE' is the title tag of the fieldset, "$#" is
+ the index of the fieldset. Therefore, to generate status buttons like
+ "Step 3: provide your credentials", use "Step $#: $TITLE"
+ *  statusButtonsSpacer: any html to add between the generated status buttons
+ by default the status buttons are just an ordered list of the names of
+ the panels
+ *  nextButton: name of the next button added to each panel. Defaults to 'Next'.
+ *  prevButton: name of the previous button added to each panel. 'Previous',
+ *  nextCallback: function to be called when the user goes to the next panel
+ */
+$.fn.wizardize = function(options) {
+
+  var config = $.extend({}, $.fn.wizardize.defaults, options);
+
+  $(this).each(function() {
+
+    var $context = $(this).addClass('wizardized').data('config', config);
+
+    var $fieldsets = $('fieldset', $context);
+
+    // Build the status buttons
+    var titles = $fieldsets.map(function(n) {
+      var title;
+      if (config.statusButtonsTemplate) {
+        title = config.statusButtonsTemplate.replace(/\$#/, n + 1).replace(/\$TITLE/, this.title);
+      } else {
+        title = config.statusButtonTemplateFunction(n + 1, this.title);
+      }
+      return "<li>" + title + "</li>";
+    });
+    titles = $.makeArray(titles).join(config.statusButtonsSpacer ? '<li class="wzdr_spacer">' + config.statusButtonsSpacer + '</li>' : '');
+    var $statusButtons = $('<ol />').prependTo($context);
+    $statusButtons.html(titles);
+    $statusButtons.find('li:first').addClass('active');
+
+    var allowedToMoveForward = function(indexToShow, indexToHide) {
+      return $("fieldset:nth(" + indexToHide + ")", $context).hasClass("complete") && $("fieldset:nth(" + indexToShow + ")", $context).hasClass("enabled");
+    };
+
+    $("li:not(.wzdr_spacer)", $statusButtons).click(function() {
+      var indexToShow = $("li:not(.wzdr_spacer)", $statusButtons).index($(this));
+      var $currentlyShowing = $("li.active:first", $statusButtons);
+      var indexToHide = $("li:not(.wzdr_spacer)", $statusButtons).index($currentlyShowing);
+      if (indexToShow < indexToHide || allowedToMoveForward(indexToShow, indexToHide)) {
+        $.fn.wizardize.showFieldset($context, indexToHide, indexToShow);
+      }
+    });
+
+    // hide all but the first fieldset
+    $('fieldset:not(:first)', $context).hide();
+    $('fieldset:first', $context).addClass("enabled");
+    $('li:first', $context).addClass("enabled");
+
+    $('fieldset', $context).each(function(index) {
+      var $nextPrev = $('<div />').appendTo($(this)).addClass("next_prev_buttons");
+      if (index !== 0) {
+        $nextPrev.append('<a>' + config.prevButton + '</a>').find('a:last').addClass('prev').click($.fn.wizardize.previous);
+      }
+      if (index < ($('fieldset', $context).length - 1)) {
+        $nextPrev.append('<a>' + config.nextButton + '</a>').find('a:last').addClass('next').click($.fn.wizardize.next);
+      } else {
+        var submitText = $('input:submit', $context).remove().val();
+        $nextPrev.append('<a>' + submitText + '</a>').find('a:last').addClass('next').addClass('submit').click(function() {
+          $context.submit();
+        });
+      }
+    });
   });
-  titles = $.makeArray(titles).join(config.statusButtonsSpacer ? '<li class="spacer">' + config.statusButtonsSpacer + '</li>' : '');
-  $statusButtons.html(titles);
-  $statusButtons.find('li:first').addClass('active');
-
-  var allowedToMoveForward = function(indexToShow, indexToHide) {
-    return $("fieldset:nth(" + indexToHide + ")", $context).hasClass("complete") && $("fieldset:nth(" + indexToShow + ")", $context).hasClass("enabled")
-  };
-
-  $("li:not(.spacer)", $statusButtons).click(function() {
-    var indexToShow = $("li:not(.spacer)", $statusButtons).index($(this));
-    var $currentlyShowing = $("li.active:first", $statusButtons);
-    var indexToHide = $("li:not(.spacer)", $statusButtons).index($currentlyShowing);
-    if (indexToShow < indexToHide || allowedToMoveForward(indexToShow, indexToHide)) {
-      $.fn.wizardize.showFieldset($context, indexToHide, indexToShow);
-    }
-  });
-
-  // hide all but the first fieldset
-  $('fieldset:not(:first)', $context).hide();
-  $('fieldset:first', $context).addClass("enabled");
-  $('li:first', $context).addClass("enabled");
-
-  $('fieldset', $context).each(function(index) {
-    var $nextPrev = $('<div />').appendTo($(this)).addClass("next_prev_buttons");
-    if (index !== 0) {
-      $nextPrev.append('<a>' + config.prevButton + '</a>').find('a:last').addClass('prev').click($.fn.wizardize.previous);
-    }
-    if (index < ($('fieldset', $context).length - 1)) {
-      $nextPrev.append('<a>' + config.nextButton + '</a>').find('a:last').addClass('next').click($.fn.wizardize.next);
-    } else {
-      var submitText = $('input:submit', $context).remove().val();
-      $nextPrev.append('<a>' + submitText + '</a>').find('a:last').addClass('next').addClass('submit').click(function() {
-        $context.submit();
-      });
-    }
-  });
+  return this;
 };
 
 
@@ -111,28 +137,28 @@ $.fn.wizardize.showFieldset = function($wizardContext, indexToHide, indexToShow)
   $("fieldset:nth(" + indexToShow + ")", $wizardContext).show();
   $("fieldset:nth(" + indexToHide + ")", $wizardContext).hide();
 
-  var $statusButtons = $wizardContext.find("ol:first li:not(.spacer)");
+  var $statusButtons = $wizardContext.find("ol:first li:not(.wzdr_spacer)");
 
   $($statusButtons[indexToHide]).removeClass('active');
   $($statusButtons[indexToShow]).addClass('active');
 
-  window.scroll(0,0);
+  window.scroll(0, 0);
 };
 
 
 $.fn.wizardizeMarkFieldsetAsComplete = function(index) {
-  $("li:not(.spacer):nth(" + (index + 1) + ")", $(this)).addClass("enabled");
+  $("li:not(.wzdr_spacer):nth(" + (index + 1) + ")", $(this)).addClass("enabled");
   $("fieldset:nth(" + (index + 1) + ")", $(this)).removeClass("disabled").addClass("enabled");
 
-  $("li:not(.spacer):nth(" + index + ")", $(this)).addClass("enabled").addClass('complete');
+  $("li:not(.wzdr_spacer):nth(" + index + ")", $(this)).addClass("enabled").addClass('complete');
   $("fieldset:nth(" + index + ")", $(this)).addClass("complete");
   return this;
 };
 
 $.fn.wizardizeMarkFieldsetAsIncomplete = function(index) {
-  $("li:not(.spacer):gt(" + index + ")", $(this)).removeClass("enabled");
+  $("li:not(.wzdr_spacer):gt(" + index + ")", $(this)).removeClass("enabled");
   $("fieldset:gt(" + index + ")", $(this)).removeClass("enabled").addClass("disabled");
-  $("fieldset:gt(" + (index-1) + ")", $(this)).removeClass("complete");
+  $("fieldset:gt(" + (index - 1) + ")", $(this)).removeClass("complete");
   return this;
 };
 
