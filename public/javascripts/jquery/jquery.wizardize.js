@@ -33,27 +33,24 @@ $.fn.wizardize = function(options) {
 
     // Build the status buttons
     var titles = $fieldsets.map(function(n) {
-      var title;
-      if (config.statusButtonsTemplate) {
-        title = config.statusButtonsTemplate.replace(/\$#/, n + 1).replace(/\$TITLE/, this.title);
-      } else {
-        title = config.statusButtonTemplateFunction(n + 1, this.title);
-      }
+      var title = (config.statusButtonsTemplate) ?
+        config.statusButtonsTemplate.replace(/\$#/, n + 1).replace(/\$TITLE/, this.title) :
+        config.statusButtonTemplateFunction(n + 1, this.title);
       return "<li>" + title + "</li>";
     });
     titles = $.makeArray(titles).join(config.statusButtonsSpacer ? '<li class="wzdr_spacer">' + config.statusButtonsSpacer + '</li>' : '');
-    var $statusButtons = $('<ol />').prependTo($context);
-    $statusButtons.html(titles);
-    $statusButtons.find('li:first').addClass('active');
+    var $statusButtonArea = $('<ol />').prependTo($context);
+    $statusButtonArea.html(titles);
+    $statusButtonArea.find('li:first').addClass('active');
 
     var allowedToMoveForward = function(indexToShow, indexToHide) {
       return $("fieldset:nth(" + indexToHide + ")", $context).hasClass("complete") && $("fieldset:nth(" + indexToShow + ")", $context).hasClass("enabled");
     };
 
-    $("li:not(.wzdr_spacer)", $statusButtons).click(function() {
-      var indexToShow = $("li:not(.wzdr_spacer)", $statusButtons).index($(this));
-      var $currentlyShowing = $("li.active:first", $statusButtons);
-      var indexToHide = $("li:not(.wzdr_spacer)", $statusButtons).index($currentlyShowing);
+    $("li:not(.wzdr_spacer)", $statusButtonArea).click(function() {
+      var indexToShow = $("li:not(.wzdr_spacer)", $statusButtonArea).index($(this));
+      var $currentlyShowing = $("li.active:first", $statusButtonArea);
+      var indexToHide = $("li:not(.wzdr_spacer)", $statusButtonArea).index($currentlyShowing);
       if (indexToShow < indexToHide || allowedToMoveForward(indexToShow, indexToHide)) {
         $.fn.wizardize.showFieldset($context, indexToHide, indexToShow);
       }
@@ -145,9 +142,8 @@ $.fn.wizardize.showFieldset = function($wizardContext, indexToHide, indexToShow)
   window.scroll(0, 0);
 };
 
-
 $.fn.wizardizeMarkFieldsetAsComplete = function(index) {
-  $("li:not(.wzdr_spacer):nth(" + (index + 1) + ")", $(this)).addClass("enabled");
+  $("li:not(.wzdr_spacer):nth(" + (index + 1) + ")", this).addClass("enabled");
   $("fieldset:nth(" + (index + 1) + ")", $(this)).removeClass("disabled").addClass("enabled");
 
   $("li:not(.wzdr_spacer):nth(" + index + ")", $(this)).addClass("enabled").addClass('complete');
