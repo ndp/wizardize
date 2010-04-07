@@ -8,18 +8,22 @@
  * adds "next" and "previous" buttons to each panel
  * The regular submit button for the form is moved to the last panel.
 
- wizardize accepts an options hash. All values are optional:
+ wizardize accepts an options hash:
 
  *  statusButtonsTemplate: how the status buttons are named. Supports simple
  variable substitution: '$TITLE' is the title tag of the fieldset, "$#" is
  the index of the fieldset. Therefore, to generate status buttons like
  "Step 3: provide your credentials", use "Step $#: $TITLE"
- *  statusButtonsSpacer: any html to add between the generated status buttons
- by default the status buttons are just an ordered list of the names of
- the panels
+ *  statusButtonsSpacer: any html to add between the generated status buttons.
+ By default the status buttons are just an ordered list of the names of
+ the panels.
  *  nextButton: name of the next button added to each panel. Defaults to 'Next'.
  *  prevButton: name of the previous button added to each panel. 'Previous',
  *  nextCallback: function to be called when the user goes to the next panel
+ *
+ *
+ * The following events are available:
+ * On wizard:
  */
 $.fn.wizardize = function(options) {
 
@@ -47,10 +51,11 @@ $.fn.wizardize = function(options) {
       return $("fieldset:nth(" + indexToHide + ")", $context).hasClass("complete") && $("fieldset:nth(" + indexToShow + ")", $context).hasClass("enabled");
     };
 
-    $("li:not(.wzdr_spacer)", $statusButtonArea).click(function() {
-      var indexToShow = $("li:not(.wzdr_spacer)", $statusButtonArea).index($(this));
+    var $statusButtons = $("li:not(.wzdr_spacer)", $statusButtonArea);
+    $statusButtons.click(function() {
+      var indexToShow = $statusButtons.index($(this));
       var $currentlyShowing = $("li.active:first", $statusButtonArea);
-      var indexToHide = $("li:not(.wzdr_spacer)", $statusButtonArea).index($currentlyShowing);
+      var indexToHide = $statusButtons.index($currentlyShowing);
       if (indexToShow < indexToHide || allowedToMoveForward(indexToShow, indexToHide)) {
         $.fn.wizardize.showFieldset($context, indexToHide, indexToShow);
       }
@@ -61,14 +66,17 @@ $.fn.wizardize = function(options) {
     $('fieldset:first', $context).addClass("enabled");
     $('li:first', $context).addClass("enabled");
 
+    // Add next and prev buttons
     $('fieldset', $context).each(function(index) {
       var $nextPrev = $('<div />').appendTo($(this)).addClass("next_prev_buttons");
-      if (index !== 0) {
+      if (index !== 0) { // all but first need "prev" button
         $nextPrev.append('<a>' + config.prevButton + '</a>').find('a:last').addClass('prev').click($.fn.wizardize.previous);
       }
+      // all but last need a "next" button
       if (index < ($('fieldset', $context).length - 1)) {
         $nextPrev.append('<a>' + config.nextButton + '</a>').find('a:last').addClass('next').click($.fn.wizardize.next);
       } else {
+        // last needs the submit button... rebuild one ourselves
         var submitText = $('input:submit', $context).remove().val();
         $nextPrev.append('<a>' + submitText + '</a>').find('a:last').addClass('next').addClass('submit').click(function() {
           $context.submit();
