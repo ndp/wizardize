@@ -57,7 +57,7 @@ $.fn.wizardize = function(options) {
       var $currentlyShowing = $("li.active:first", $statusButtonArea);
       var indexToHide = $statusButtons.index($currentlyShowing);
       if (indexToShow < indexToHide || allowedToMoveForward(indexToShow, indexToHide)) {
-        $.fn.wizardize.showFieldset($context, indexToHide, indexToShow);
+        config.showFieldset($context, indexToHide, indexToShow);
       }
     });
 
@@ -73,7 +73,7 @@ $.fn.wizardize = function(options) {
       }
       var $fieldsetClicked = $(this).parents('fieldset:first');
       var index = $fieldsets.index($fieldsetClicked);
-      $.fn.wizardize.showFieldset($context, index, index - 1);
+      config.showFieldset($context, index, index - 1);
     };
     $context.bind('prevButtonClicked', function() {
       $('fieldset:visible .next_prev_buttons .prev', $context).each(function() {
@@ -91,7 +91,7 @@ $.fn.wizardize = function(options) {
       }
       if ($fieldsetClicked.hasClass("complete")) {
         var $newFieldset = $fieldsetClicked.next(':first');
-        $.fn.wizardize.showFieldset($context, index, index + 1);
+        config.showFieldset($context, index, index + 1);
         if (config.nextCallback) {
           config.nextCallback.call($newFieldset.get(0), index + 1);
         }
@@ -100,7 +100,7 @@ $.fn.wizardize = function(options) {
 
 
     $('fieldset', $context).each(function(index) {
-      var $nextPrev = $('<div />').appendTo($(this)).addClass("next_prev_buttons");
+      var $nextPrev = $('<div class="next_prev_buttons"/>').appendTo($(this));
       if (index !== 0) { // all but first need "prev" button
         $('<a class="prev">' + config.prevButton + '</a>').click(prevButtonClicked).appendTo($nextPrev);
       }
@@ -110,9 +110,9 @@ $.fn.wizardize = function(options) {
       } else {
         // last needs the submit button... rebuild one ourselves
         var submitText = $('input:submit', $context).remove().val();
-        $nextPrev.append('<a>' + submitText + '</a>').find('a:last').addClass('next').addClass('submit').click(function() {
+        $('<a class="next submit">' + submitText + '</a>').click(function() {
           $context.submit();
-        });
+        }).appendTo($nextPrev);
       }
     });
   });
@@ -128,7 +128,18 @@ $.fn.wizardize.defaults = {
   statusButtonTemplateFunction: function(stepNumber, title) {
     return title;
   },
-  statusButtonsSpacer: null
+  statusButtonsSpacer: null,
+  showFieldset: function($wizardContext, indexToHide, indexToShow) {
+    $("fieldset:nth(" + indexToShow + ")", $wizardContext).show();
+    $("fieldset:nth(" + indexToHide + ")", $wizardContext).hide();
+
+    var $statusButtons = $wizardContext.find("ol:first li:not(.wzdr_spacer)");
+
+    $($statusButtons[indexToHide]).removeClass('active');
+    $($statusButtons[indexToShow]).addClass('active');
+
+    window.scroll(0, 0);
+  }
 };
 
 // backward compatible
@@ -136,26 +147,14 @@ $.fn.wizardize.previous = function(e) {
   $(this).parents('.wizardized:first').trigger('prevButtonClicked', e);
 }
 
+// backward compatible
 $.fn.wizardize.next = function(e) {
   $(this).parents('.wizardized:first').trigger('nextButtonClicked', e);
-};
-
-$.fn.wizardize.showFieldset = function($wizardContext, indexToHide, indexToShow) {
-  $("fieldset:nth(" + indexToShow + ")", $wizardContext).show();
-  $("fieldset:nth(" + indexToHide + ")", $wizardContext).hide();
-
-  var $statusButtons = $wizardContext.find("ol:first li:not(.wzdr_spacer)");
-
-  $($statusButtons[indexToHide]).removeClass('active');
-  $($statusButtons[indexToShow]).addClass('active');
-
-  window.scroll(0, 0);
 };
 
 $.fn.wizardizeMarkFieldsetAsComplete = function(index) {
   $("li:not(.wzdr_spacer):nth(" + (index + 1) + ")", this).addClass("enabled");
   $("fieldset:nth(" + (index + 1) + ")", $(this)).removeClass("disabled").addClass("enabled");
-
   $("li:not(.wzdr_spacer):nth(" + index + ")", $(this)).addClass("enabled").addClass('complete');
   $("fieldset:nth(" + index + ")", $(this)).addClass("complete");
   return this;
