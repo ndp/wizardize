@@ -22,8 +22,18 @@
  *  nextCallback: function to be called when the user goes to the next panel
  *
  *
- * The following events are available:
+ * The following events are broadcast:
  * On wizard:
+ *  'prevButtonClicked'
+ *  'nextButtonClicked'
+ *
+ * On each fieldset:
+ *
+ *
+ * The follow events are processed:
+ *  'prevButtonClicked' - simulate a click on the previous button
+ *  'nextButtonClicked' - simulate a click on the next button
+ *
  */
 $.fn.wizardize = function(options) {
 
@@ -86,7 +96,7 @@ $.fn.wizardize = function(options) {
       }
       var $fieldsetClicked = $('fieldset:visible', $context);
       var index = $fieldsets.index($fieldsetClicked);
-      if (config.validateFieldset && !config.validateFieldset.call($fieldsetClicked[0])) {
+      if (!config.validateFieldset.call($fieldsetClicked[0])) {
         return;
       }
       if ($fieldsetClicked.hasClass("complete")) {
@@ -98,7 +108,7 @@ $.fn.wizardize = function(options) {
       }
     });
 
-
+    // Add all the buttons we need
     $('fieldset', $context).each(function(index) {
       var $nextPrev = $('<div class="next_prev_buttons"/>').appendTo($(this));
       if (index !== 0) { // all but first need "prev" button
@@ -129,6 +139,9 @@ $.fn.wizardize.defaults = {
     return title;
   },
   statusButtonsSpacer: null,
+  validateFieldset: function() {
+    return true;
+  },
   showFieldset: function($wizardContext, indexToHide, indexToShow) {
     $("fieldset:nth(" + indexToShow + ")", $wizardContext).show();
     $("fieldset:nth(" + indexToHide + ")", $wizardContext).hide();
