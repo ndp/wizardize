@@ -38,8 +38,8 @@ $.fn.wizardize = function(options) {
     // Build the status buttons
     var titles = $fieldsets.map(function(n) {
       var title = (config.statusButtonsTemplate) ?
-        config.statusButtonsTemplate.replace(/\$#/, n + 1).replace(/\$TITLE/, this.title) :
-        config.statusButtonTemplateFunction(n + 1, this.title);
+                  config.statusButtonsTemplate.replace(/\$#/, n + 1).replace(/\$TITLE/, this.title) :
+                  config.statusButtonTemplateFunction(n + 1, this.title);
       return "<li>" + title + "</li>";
     });
     titles = $.makeArray(titles).join(config.statusButtonsSpacer ? '<li class="wzdr_spacer">' + config.statusButtonsSpacer + '</li>' : '');
@@ -67,14 +67,46 @@ $.fn.wizardize = function(options) {
     $('li:first', $context).addClass("enabled");
 
     // Add next and prev buttons
+    var prevButtonClicked = function(e) {
+      if (e) {
+        e.preventDefault();
+      }
+      var $fieldsetClicked = $(this).parents('fieldset:first');
+      var index = $fieldsets.index($fieldsetClicked);
+      $.fn.wizardize.showFieldset($context, index, index - 1);
+    };
+    $context.bind('prevButtonClicked', function() {
+      $('fieldset:visible .next_prev_buttons .prev', $context).each(function() {
+        prevButtonClicked.apply(this)
+      })
+    });
+    $context.bind('nextButtonClicked', function(e, origEvent) {
+      if (origEvent) {
+        origEvent.preventDefault();
+      }
+      var $fieldsetClicked = $('fieldset:visible', $context);
+      var index = $fieldsets.index($fieldsetClicked);
+      if (config.validateFieldset && !config.validateFieldset.call($fieldsetClicked[0])) {
+        return;
+      }
+      if ($fieldsetClicked.hasClass("complete")) {
+        var $newFieldset = $fieldsetClicked.next(':first');
+        $.fn.wizardize.showFieldset($context, index, index + 1);
+        if (config.nextCallback) {
+          config.nextCallback.call($newFieldset.get(0), index + 1);
+        }
+      }
+    });
+
+
     $('fieldset', $context).each(function(index) {
       var $nextPrev = $('<div />').appendTo($(this)).addClass("next_prev_buttons");
       if (index !== 0) { // all but first need "prev" button
-        $nextPrev.append('<a>' + config.prevButton + '</a>').find('a:last').addClass('prev').click($.fn.wizardize.previous);
+        $('<a class="prev">' + config.prevButton + '</a>').click(prevButtonClicked).appendTo($nextPrev);
       }
       // all but last need a "next" button
       if (index < ($('fieldset', $context).length - 1)) {
-        $nextPrev.append('<a>' + config.nextButton + '</a>').find('a:last').addClass('next').click($.fn.wizardize.next);
+        $('<a class="next">' + config.nextButton + '</a>').click($.fn.wizardize.next).appendTo($nextPrev);
       } else {
         // last needs the submit button... rebuild one ourselves
         var submitText = $('input:submit', $context).remove().val();
@@ -99,43 +131,13 @@ $.fn.wizardize.defaults = {
   statusButtonsSpacer: null
 };
 
-
+// backward compatible
 $.fn.wizardize.previous = function(e) {
-  e.preventDefault();
-  var $wizardContext = $(this).parents(".wizardized:first");
-  var $fieldsetClicked = $(this).parents('fieldset:first');
-  var $fieldsets = $fieldsetClicked.parents(':first').find('fieldset');
-  var index = $fieldsets.index($fieldsetClicked);
-
-  $.fn.wizardize.showFieldset($wizardContext, index, index - 1);
-};
+  $(this).parents('.wizardized:first').trigger('prevButtonClicked', e);
+}
 
 $.fn.wizardize.next = function(e) {
-  e.preventDefault();
-
-  var $wizardContext = $(this).parents('.wizardized:first');
-  var $fieldsetClicked = $(this).parents('fieldset:first');
-  var $fieldsets = $fieldsetClicked.parents(':first').find('fieldset');
-  var index = $fieldsets.index($fieldsetClicked);
-
-  var config = $wizardContext.data('config');
-
-  if (config.validateFieldset) {
-    var valid = config.validateFieldset.call($fieldsetClicked[0]);
-    if (!valid) {
-      return;
-    }
-  }
-
-  if ($fieldsetClicked.hasClass("complete")) {
-    var $newFieldset = $fieldsetClicked.next(':first');
-
-    $.fn.wizardize.showFieldset($wizardContext, index, index + 1);
-
-    if (config.nextCallback) {
-      config.nextCallback.call($newFieldset.get(0), index + 1);
-    }
-  }
+  $(this).parents('.wizardized:first').trigger('nextButtonClicked', e);
 };
 
 $.fn.wizardize.showFieldset = function($wizardContext, indexToHide, indexToShow) {
