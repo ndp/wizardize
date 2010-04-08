@@ -46,6 +46,7 @@ $.fn.wizardize = function(options) {
     var $fieldsets = $('fieldset', $context);
 
     // Build the status buttons
+    var $statusButtonArea = $('<ol />').prependTo($context);
     var titles = $fieldsets.map(function(n) {
       var title = (config.statusButtonsTemplate) ?
                   config.statusButtonsTemplate.replace(/\$#/, n + 1).replace(/\$TITLE/, this.title) :
@@ -53,7 +54,6 @@ $.fn.wizardize = function(options) {
       return "<li>" + title + "</li>";
     });
     titles = $.makeArray(titles).join(config.statusButtonsSpacer ? '<li class="wzdr_spacer">' + config.statusButtonsSpacer + '</li>' : '');
-    var $statusButtonArea = $('<ol />').prependTo($context);
     $statusButtonArea.html(titles);
     $statusButtonArea.find('li:first').addClass('active');
 
@@ -167,9 +167,9 @@ $.fn.wizardize.next = function(e) {
 
 $.fn.wizardizeMarkFieldsetAsComplete = function(index) {
   $("li:not(.wzdr_spacer):nth(" + (index + 1) + ")", this).addClass("enabled");
-  $("fieldset:nth(" + (index + 1) + ")", $(this)).removeClass("disabled").addClass("enabled");
-  $("li:not(.wzdr_spacer):nth(" + index + ")", $(this)).addClass("enabled").addClass('complete');
-  $("fieldset:nth(" + index + ")", $(this)).addClass("complete");
+  $("fieldset:nth(" + (index + 1) + ")", this).removeClass("disabled").addClass("enabled");
+  $("li:not(.wzdr_spacer):nth(" + index + ")", this).addClass("enabled").addClass('complete');
+  $("fieldset:nth(" + index + ")", this).addClass("complete");
   return this;
 };
 
